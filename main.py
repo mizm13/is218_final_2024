@@ -149,7 +149,7 @@ async def divide_route(operation: OperationRequest):
     """
     try:
         if operation.b == 0:
-            raise ValueError("Cannot divide by zero.")
+            raise ValueError("Cannot divide by zero!")
         result = operation.a / operation.b
         return OperationResponse(result=result)
     except ValueError as e:
