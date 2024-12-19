@@ -1,23 +1,3 @@
-# app/operations.py
-
-"""
-Module: operations.py
-
-This module contains basic arithmetic functions that perform addition, subtraction,
-multiplication, and division of two numbers. These functions are foundational for
-building more complex applications, such as calculators or financial tools.
-
-Functions:
-- add(a: Union[int, float], b: Union[int, float]) -> Union[int, float]: Returns the sum of a and b.
-- subtract(a: Union[int, float], b: Union[int, float]) -> Union[int, float]: Returns the difference when b is subtracted from a.
-- multiply(a: Union[int, float], b: Union[int, float]) -> Union[int, float]: Returns the product of a and b.
-- divide(a: Union[int, float], b: Union[int, float]) -> float: Returns the quotient when a is divided by b. Raises ValueError if b is zero.
-
-Usage:
-These functions can be imported and used in other modules or integrated into APIs
-to perform arithmetic operations based on user input.
-"""
-
 from typing import Union  # Import Union for type hinting multiple possible types
 
 # Define a type alias for numbers that can be either int or float
@@ -33,12 +13,6 @@ def add(a: Number, b: Number) -> Number:
 
     Returns:
     - int or float: The sum of a and b.
-
-    Example:
-    >>> add(2, 3)
-    5
-    >>> add(2.5, 3)
-    5.5
     """
     # Perform addition of a and b
     result = a + b
@@ -54,12 +28,6 @@ def subtract(a: Number, b: Number) -> Number:
 
     Returns:
     - int or float: The difference between a and b.
-
-    Example:
-    >>> subtract(5, 3)
-    2
-    >>> subtract(5.5, 2)
-    3.5
     """
     # Perform subtraction of b from a
     result = a - b
@@ -75,12 +43,6 @@ def multiply(a: Number, b: Number) -> Number:
 
     Returns:
     - int or float: The product of a and b.
-
-    Example:
-    >>> multiply(2, 3)
-    6
-    >>> multiply(2.5, 4)
-    10.0
     """
     # Perform multiplication of a and b
     result = a * b
@@ -99,15 +61,6 @@ def divide(a: Number, b: Number) -> float:
 
     Raises:
     - ValueError: If b is zero, as division by zero is undefined.
-
-    Example:
-    >>> divide(6, 3)
-    2.0
-    >>> divide(5.5, 2)
-    2.75
-    >>> divide(5, 0)
-    Traceback (most recent call last):
-        ...
     ValueError: Cannot divide by zero!
     """
     # Check if the divisor is zero to prevent division by zero
