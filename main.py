@@ -1,11 +1,10 @@
-import requests
-import os
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.exceptions import RequestValidationError  # <-- Add this import
 from pydantic import BaseModel, Field
-from fastapi.exceptions import RequestValidationError
-from app.operations import add, subtract, multiply, divide
+import requests
+import os
 import logging
 import uvicorn
 
@@ -13,24 +12,34 @@ import uvicorn
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# FastAPI app setup
+# Setup FastAPI app
 app = FastAPI()
 
-# Setup templates directory (adjust according to your project structure)
+# Setup templates directory
 templates = Jinja2Templates(directory="templates")
 
 # API Configuration
 API_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions"
 API_KEY = os.getenv("API_KEY")  # Ensure your .env file contains API_KEY
 
-# Pydantic model for request data
+# Pydantic model for operation input data
 class OperationRequest(BaseModel):
     a: float = Field(..., description="The first number")
     b: float = Field(..., description="The second number")
 
+# Pydantic model for operation response
+class OperationResponse(BaseModel):
+    result: float = Field(..., description="The result of the operation")
+
+# Pydantic model for error response
+class ErrorResponse(BaseModel):
+    error: str = Field(..., description="Error message")
+
+# Pydantic model for LLM request data
 class LLMRequest(BaseModel):
     query: str = Field(..., description="User query for LLM")
 
+# Pydantic model for LLM response
 class LLMResponse(BaseModel):
     operation: str = Field(..., description="Suggested operation")
     explanation: str = Field(..., description="Explanation from LLM")
@@ -53,13 +62,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"error": error_messages},
     )
 
-# LLM route to suggest an operation based on user query
-@app.post("/llm", response_model=LLMResponse, responses={400: {"description": "Error occurred"}})
-async def llm_route(llm_request: LLMRequest):
-    """
-    Use LLM to suggest an operation.
-    """
-    query = llm_request.query
+# Function to interact with the LLM API and get operation suggestion
+def perform_llm_operation(query: str) -> LLMResponse:
     headers = {
         "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json",
@@ -79,7 +83,7 @@ async def llm_route(llm_request: LLMRequest):
 
         # Parse the LLM response
         suggestion = result["choices"][0]["message"]["content"]
-        
+
         # Determine the operation
         if "add" in suggestion.lower():
             operation = "add"
@@ -98,35 +102,93 @@ async def llm_route(llm_request: LLMRequest):
         raise HTTPException(status_code=400, detail="Error communicating with LLM API.")
     except Exception as e:
         logger.error(f"LLM Parsing Error: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Error processing LLM response: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
 
-# Example route to demonstrate using LLM with operations
-@app.post("/llm/execute")
-async def llm_execute(operation: OperationRequest, llm_suggestion: LLMResponse = Depends(llm_route)):
+# Operation Routes
+
+@app.post("/add", response_model=OperationResponse, responses={400: {"model": ErrorResponse}})
+async def add_route(operation: OperationRequest):
+    """
+    Add two numbers.
+    """
+    try:
+        result = operation.a + operation.b
+        return OperationResponse(result=result)
+    except Exception as e:
+        logger.error(f"Add Operation Error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/subtract", response_model=OperationResponse, responses={400: {"model": ErrorResponse}})
+async def subtract_route(operation: OperationRequest):
+    """
+    Subtract two numbers.
+    """
+    try:
+        result = operation.a - operation.b
+        return OperationResponse(result=result)
+    except Exception as e:
+        logger.error(f"Subtract Operation Error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/multiply", response_model=OperationResponse, responses={400: {"model": ErrorResponse}})
+async def multiply_route(operation: OperationRequest):
+    """
+    Multiply two numbers.
+    """
+    try:
+        result = operation.a * operation.b
+        return OperationResponse(result=result)
+    except Exception as e:
+        logger.error(f"Multiply Operation Error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/divide", response_model=OperationResponse, responses={400: {"model": ErrorResponse}})
+async def divide_route(operation: OperationRequest):
+    """
+    Divide two numbers.
+    """
+    try:
+        if operation.b == 0:
+            raise ValueError("Cannot divide by zero.")
+        result = operation.a / operation.b
+        return OperationResponse(result=result)
+    except ValueError as e:
+        logger.error(f"Divide Operation Error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Divide Operation Internal Error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+# Route to perform operation using LLM suggestion
+@app.post("/llm/execute", response_model=OperationResponse)
+async def llm_execute(operation: OperationRequest, llm_request: LLMRequest):
     """
     Execute the operation suggested by the LLM.
     """
+    llm_suggestion = perform_llm_operation(llm_request.query)
+
     if llm_suggestion.operation == "add":
-        result = add(operation.a, operation.b)
+        result = operation.a + operation.b
     elif llm_suggestion.operation == "subtract":
-        result = subtract(operation.a, operation.b)
+        result = operation.a - operation.b
     elif llm_suggestion.operation == "multiply":
-        result = multiply(operation.a, operation.b)
+        result = operation.a * operation.b
     elif llm_suggestion.operation == "divide":
-        result = divide(operation.a, operation.b)
+        if operation.b == 0:
+            raise HTTPException(status_code=400, detail="Cannot divide by zero")
+        result = operation.a / operation.b
     else:
         raise HTTPException(status_code=400, detail="Unsupported operation suggested by LLM.")
-    
-    return {"result": result, "explanation": llm_suggestion.explanation}
 
-# Route to render the index template
+    return OperationResponse(result=result)
+
+# Route to serve the main template (form)
 @app.get("/")
 async def read_root(request: Request):
     """
-    Render the index.html template.
+    Serve the index.html template.
     """
     return templates.TemplateResponse("index.html", {"request": request})
 
-# Run the app with uvicorn
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
