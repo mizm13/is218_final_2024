@@ -69,7 +69,7 @@ def perform_llm_operation(query: str) -> LLMResponse:
         "Content-Type": "application/json",
     }
     payload = {
-        "model": "gpt-4",
+        "model": "llama-3.2-1b-preview",
         "messages": [
             {"role": "system", "content": "You are a helpful assistant that suggests mathematical operations."},
             {"role": "user", "content": query},
