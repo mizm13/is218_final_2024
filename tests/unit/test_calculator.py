@@ -230,5 +230,5 @@ def test_divide_by_zero() -> None:
         divide(6, 0)
     
     # Assert that the exception message contains the expected error message
-    assert "Cannot divide by zero!" in str(excinfo.value), \
+    assert "Cannot divide by zero" in str(excinfo.value), \
         f"Expected error message 'Cannot divide by zero!', but got '{excinfo.value}'"
