@@ -17,8 +17,6 @@ Welcome to the **Calculator Application**! This web-based tool performs basic ar
 
 ## Features
 
-- **Arithmetic Operations**: Perform addition, subtraction, multiplication, division, power, and modulus operations.
-- **History Management**: Keep a record of all executed operations with the ability to view, undo, and clear history.
 - **Basic Arithmetic Operations**: Perform addition, subtraction, multiplication, and division.
 - **LLM-Powered Operation Suggestions**: Get operation suggestions based on user queries using a language model.
 - **Comprehensive Logging**: Detailed logs are maintained for monitoring and debugging purposes.
@@ -38,3 +36,5 @@ Welcome to the **Calculator Application**! This web-based tool performs basic ar
 - **Install packages**: pip install -r requirements
 
 ### Video 
+
+https://youtu.be/z8sgMyMUJKc
